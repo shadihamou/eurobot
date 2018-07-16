@@ -1,0 +1,60 @@
+//READ ME FIRST PLEASE//
+*** Hey guys, here are the files i used for my robot for the 2018 Eurobot chamoionship***
+*** I came 5th place at my university championship (University Of southampton)***
+*** All u need is an arduino and an MD25 kit from robot electronics***
+*** Chassis, CAD, electronic circuitry, enginering stuff is completely up to you***
+*** The code is written in C/C++ and is completely customizable***
+*** Download and enjoy! i hope you learn as much as i did ;) ***
+
+//CODE DETAILS// (some PID theory and ideas too! ;))
+---------------------------------------------------functions.ino file----------------------------------------------------------------------
+This is where all the main functions that the robot must perform are defined such as servo activation, 
+reading of ultrasonic sensors, 
+forward and backward functions that implement obstacle avoidance as well as similar functions which do not utilise 
+obstacle avoidance. Turn functions were also implemented under spin right and left thus enabling the robot to rotate at spot.
+Within the forward(input distance in mm) and spin (input angle in degrees) functions a PID controller was implemented
+in order to reduce the error based on encoder ticks, 
+(overshoot is involved because there is inertia involved in the robots movements when it comes to a halt). 
+More specifically  for the forward with obstacle detection function: input distance is converted to encoder ticks, 
+then it repeats a while loop (loop1) until it hasn’t reached the desired input distance, within loop1 another while loop 
+(loop 2) is implemented basically saying while the reading from the front ultrasonic sensor is smaller than a predefined
+threshold (in definingVars.h) and if the robot is not stopped (i.e. moving) it writes 0 to the speed registers of both motors
+(speed1, speed2) (Please see snippet 2). Once the obstacle moves out of the path it continues with loop 1 where error is 
+computed via distance (in encoder ticks). It measures the current distance as an average of the 2 motors encoder ticks, 
+it then subtracts current distance value from input distance value. This is the error value which is compared with a 
+predefined threshold, where if it is greater(big error) it will travel at max speed and if smaller  it goes through
+a standard PID formula where the subject is speed. This float speed is inputted into a private Drive function. 
+The Drive function ensures that the robot travels in a straight line and does not veer off course.
+A function that initialised all the starting parameters of the robot was also utilised. 
+
+----------------------------------------------------PUBPRIV.h file-------------------------------------------------------------------------
+This header file defines a class (Eurobot) which declares all of the member functions implemented in the functions.ino file.
+In object orientated programming such as C and C++ which was used in the development of our robot,
+a class system can be utilised containing public and private functions. For example the public functions can be called within
+the loop or setup in the high level code which is technically outside the class, however, the drive function which is used 
+in the forward_with_obstacle_detection function which essentially sets the throttle of the motors is within
+the object class hence it is defined as a private function. 
+
+-------------------------------------------------High_Level.ino file---------------------------------------------------------------------------
+This file is the final interface where all the member functions are called into the setup (run once) from the class system. 
+It dictates the path of the robot on either side of the playing area by simply typing in the desired predefined member
+functions with their associated inputs. Separate paths for the green and orange sides were implemented. 
+First and foremost the initialize function is called, regardless of the path the robot will embark upon, this is because we 
+wanted all the robots starting parameters (such as attaching the servos, defining the input/output nature of all the I2C 
+bus slave devices via PinMode, beginning the serial connection at 9600 baud in order to communicate with the computer 
+containing the code and starting the I2C communication) to be commenced. Once commenced the code goes through a simple if else
+function containing a digitalRead on the physical switch implemented on the robot so that the user just switches between 
+green and orange. Basically if the digitalRead of the switch reads a High pulse it will execute the orange sides path, 
+lighting up a red LED for visual feedback, else, it will execute the green sides path lighting up a green LED. 
+An infinite loop is also implemented just before the green/orange path via a while loop. 
+The loop is only broken if the digital micro switch changes from normally open to normally closed,
+this in particular abides by the Eurobots rules of having a pull-string starting mechanism. 
+Because the robot is already initialized we do not have to worry that the robot will not start executing its tasks.
+
+-------------------------------------------------definingVars.h file------------------------------------------------------------------------------
+Finally this header file contains all the variables used in the member functions with their associated numerical 
+(or hex addresses) values so that if we ever needed to change a few parameters, 
+we simply changed the values from one file rather than going through the whole code. 
+It is here where we assigned the associated pins for each digitalWrite and Read commands and all the constants used in the PID
+formulas. This proved very useful in the testing stages of the development process.
+
